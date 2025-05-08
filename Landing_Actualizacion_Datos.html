@@ -1,0 +1,218 @@
+%%[
+set @id = RequestParameter("Id")
+set @store = RequestParameter("Store")
+set @firstName = RequestParameter("FirstName")
+set @lastName = RequestParameter("LastName")
+set @tipoIdentificacion = RequestParameter("TipoIdentificacion")
+set @identidad = RequestParameter("identidad")
+set @pasaporte = RequestParameter("pasaporte")
+set @phone = RequestParameter("Phone")
+set @email = RequestParameter("Email")
+set @contactPref = RequestParameter("ContactPreference")
+set @cashBack = RequestParameter("CashBack")
+set @fecha = RequestParameter("PersonBirthdate")
+set @redirectURL = ""
+
+if empty(@store) and not empty(@id) then
+  set @store = Lookup("PRUEBA_ACTU_DATOS", "Store", "Id", @id)
+endif
+
+if empty(@cashBack) and not empty(@id) then
+  set @cashBack = Lookup("PRUEBA_ACTU_DATOS", "CashBack", "Id", @id)
+endif
+
+if empty(@fecha) and not empty(@id) then
+  set @fecha = Lookup("PRUEBA_ACTU_DATOS", "PersonBirthdate", "Id", @id)
+endif
+
+// Verificar si se ha enviado el formulario
+if not empty(@id) and not empty(@firstName) and not empty(@lastName) and not empty(@tipoIdentificacion) and not empty(@phone) and not empty(@email) and not empty(@contactPref) and not empty(@cashBack) then
+
+  if @tipoIdentificacion == "Identidad" and not empty(@identidad) then
+    set @update = UpdateDE("PRUEBA_ACTU_DATOS", 1, "Id", @id,
+      "Store", @store,
+      "FirstName", @firstName,
+      "LastName", @lastName,
+      "TipoIdentificacion", @tipoIdentificacion,
+      "identidad", @identidad,
+      "pasaporte", "",
+      "Phone", @phone,
+      "Email", @email,
+      "ContactPreference", @contactPref,
+      "CashBack", @cashBack,
+      "FechaCreacion", @fecha
+    )
+    set @redirectURL = "https://cloud.comunicaciones.lacolonia.com/Gracias02"
+  
+  elseif @tipoIdentificacion == "Pasaporte" and not empty(@pasaporte) then
+    set @update = UpdateDE("PRUEBA_ACTU_DATOS", 1, "Id", @id,
+      "Store", @store,
+      "FirstName", @firstName,
+      "LastName", @lastName,
+      "TipoIdentificacion", @tipoIdentificacion,
+      "identidad", "",
+      "pasaporte", @pasaporte,
+      "Phone", @phone,
+      "Email", @email,
+      "ContactPreference", @contactPref,
+      "CashBack", @cashBack,
+      "FechaCreacion", @fecha
+    )
+    set @redirectURL = "https://cloud.comunicaciones.lacolonia.com/Gracias02"
+  endif
+
+endif
+
+if not empty(@redirectURL) then
+  redirect(@redirectURL)
+endif
+]%%
+
+  <meta charset="UTF-8">
+  <title>Formulario %%=v(@store)=%%</title>
+  <link rel="icon" href="https://image.comunicaciones.lacolonia.com/lib/fe3411727364047e731772/m/1/b7928d52-9515-4d9e-a7e7-b68d5bd26ac5.png" type="image/png">
+  <link href="https://cloud.comunicaciones.lacolonia.com/bootstrap.min" rel="stylesheet">
+<style>
+  /* Anula estilos que vienen por defecto en MC */
+  .layout-canvas-g {
+    all: unset;
+  }
+
+  .layout-canvas-g > .header,
+  .layout-canvas-g > .section,
+  .layout-canvas-g > .footer,
+  .layout-canvas-g > .section > .columns {
+    all: unset;
+  }
+
+  body {
+    all: unset;
+    font-family: "Segoe UI", sans-serif !important;
+    font-size: 16px !important;
+    background-color: #f0eff5 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  @media only screen and (max-width: 480px) {
+    .mobile-hidden {
+      display: initial !important;
+    }
+
+    .responsive-td {
+      width: auto !important;
+      display: inline !important;
+      padding: initial !important;
+    }
+  }
+</style>
+
+<link href="https://cloud.comunicaciones.lacolonia.com/bootstrap.min" rel="stylesheet">
+  <div class="container d-flex align-items-center justify-content-center">
+    <div class="row justify-content-md-center shadow rounded overflow-hidden">
+      <div class="col-12 col-lg-7 p-0">
+        <img src="https://image.comunicaciones.lacolonia.com/lib/fe3411727364047e731772/m/1/37db94d9-d0a0-4c6d-a6b6-e1f841683028.jpg" alt="Supermercado La Colonia" class="img-fluid h-100 w-100 object-fit-cover">
+      </div>
+      <div class="col-12 col-lg-5 bg-white p-4 smartcapture-form-wrapper">
+        <h5 class="mb-4 text-center">
+          Completa el siguiente formulario con tu información para participar.
+        </h5>
+        <form method="POST" action="" onsubmit="return validarFormulario()">
+          <div class="mb-3">
+            <label for="FirstName" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="FirstName" name="FirstName" required="">
+          </div>
+          <div class="mb-3">
+            <label for="LastName" class="form-label">Apellido</label>
+            <input type="text" class="form-control" id="LastName" name="LastName" required="">
+          </div>
+          <div class="mb-3">
+            <label for="TipoIdentificacion" class="form-label">Tipo de Identificación</label>
+            <select class="form-select" id="TipoIdentificacion" name="TipoIdentificacion" required="" onchange="mostrarCampoIdentificacion()">
+              <option value="" selected="" disabled="">--Seleccione un valor--</option>
+              <option value="Identidad">Identidad</option>
+              <option value="Pasaporte">Otro (Pasaporte, etc)</option>
+            </select>
+          </div>
+          <div class="mb-3" id="campoIdentidad" style="display: none">
+            <label for="identidad" class="form-label">Número de Identificación</label>
+            <input type="text" class="form-control" id="identidad" name="identidad">
+          </div>
+          <div class="mb-3" id="campoPasaporte" style="display: none">
+            <label for="pasaporte" class="form-label">Pasaporte</label>
+            <input type="text" class="form-control" id="pasaporte" name="pasaporte">
+          </div>
+          <div class="mb-3">
+            <label for="Phone" class="form-label">Teléfono</label>
+            <input type="tel" class="form-control" id="Phone" name="Phone" required="">
+          </div>
+          <div class="mb-3">
+            <label for="Email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="Email" name="Email" required="">
+          </div>
+          <div class="mb-3">
+            <label for="ContactPreference" class="form-label">Preferencia de contacto</label>
+            <select class="form-select" id="ContactPreference" name="ContactPreference" required="">
+              <option value="Email">Email</option>
+              <option value="SMS">SMS</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="CashBack" class="form-label">¿Te gustaría recibir 10% Cash Back?</label>
+            <select class="form-select" id="CashBack" name="CashBack" required="">
+              <option value="Si">Sí</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          <!-- Campos ocultos -->
+          <input type="hidden" name="Store" value="%%=v(@store)=%%">
+          <input type="hidden" name="Id" value="%%=v(@id)=%%">
+          <input type="hidden" name="FechaCreacion" value="%%=FormatDate(Now(), "yyyy-MM-dd")=%%">
+          <div class="text-center mt-3">
+            <button type="submit" class="btn btn-success">Enviar Información</button>
+          </div>
+        </form>
+        <div class="mt-4 text-center" style="font-size: 0.85rem">
+          La información recopilada será manejada de acuerdo a nuestras
+          <a href="https://www.lacolonia.com/politicas-de-privacidad" class="text-decoration-none">Políticas de privacidad</a>.<br>
+          © Supermercados La Colonia Derechos Reservados 2023
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cloud.comunicaciones.lacolonia.com/bootstrap.bundle.min.js"></script>
+  <script>
+    function mostrarCampoIdentificacion() {
+      const tipo = document.getElementById("TipoIdentificacion").value;
+      const campoIdentidad = document.getElementById("campoIdentidad");
+      const campoPasaporte = document.getElementById("campoPasaporte");
+
+      if (tipo === "Identidad") {
+        campoIdentidad.style.display = "block";
+        campoPasaporte.style.display = "none";
+        document.getElementById("identidad").setAttribute("required", "true");
+        document.getElementById("pasaporte").removeAttribute("required");
+      } else if (tipo === "Pasaporte") {
+        campoPasaporte.style.display = "block";
+        campoIdentidad.style.display = "none";
+        document.getElementById("pasaporte").setAttribute("required", "true");
+        document.getElementById("identidad").removeAttribute("required");
+      } else {
+        campoIdentidad.style.display = "none";
+        campoPasaporte.style.display = "none";
+        document.getElementById("pasaporte").removeAttribute("required");
+        document.getElementById("identidad").removeAttribute("required");
+      }
+    }
+  </script>
+<script>
+  var link = document.createElement('link');
+  link.type = 'image/png';
+  link.rel = 'icon';
+  link.href = 'https://image.comunicaciones.lacolonia.com/lib/fe3411727364047e731772/m/1/b7928d52-9515-4d9e-a7e7-b68d5bd26ac5.png';
+  document.getElementsByTagName('head')[0].appendChild(link);
+</script>
+
+
