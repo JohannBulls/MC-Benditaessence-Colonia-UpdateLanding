@@ -239,5 +239,8 @@ function showIdentificationField() {
 
 This setup ensures the form is **responsive** and leverages Bootstrap’s functionality for an enhanced user experience. 🌟
 
+In addition, there are custom styles included to override the default styles of Salesforce Marketing Cloud to ensure that the Bootstrap styles are applied correctly. Without these styles, the Marketing Cloud default styles would conflict with Bootstrap. 
+These styles ensure that the form layout and elements are properly displayed and behave as expected across different screen sizes. 📱💻
+
 ---
 © Developed by Johann Amaya | 2025
